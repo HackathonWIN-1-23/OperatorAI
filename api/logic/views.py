@@ -17,10 +17,14 @@ class FileUploadView(APIView):
             "audio": file_obj
         }
 
-        response = requests.post(self.post_url, files=data, headers={'Authorization': f'Bearer {self.bearer_token}'})
-        result = response.text
-        print(result)
-        return Response(json.loads(result), status=status.HTTP_200_OK)
+        try:
+            response = requests.post(self.post_url, files=data,
+                                     headers={'Authorization': f'Bearer {self.bearer_token}'})
+            result = response.text
+            print(result)
+            return Response(json.loads(result), status=status.HTTP_200_OK)
+        except:
+            return Response({"message":"something went wrong"})
 
     def get(self, request, format=None):
         return Response({'message': 'Hello World!'})

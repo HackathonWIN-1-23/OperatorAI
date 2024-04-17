@@ -29,21 +29,17 @@
               <div class="key backspace" @click="removeLastDigit">&#x232b;</div>
               <!-- Call button styled -->
             </div>
-            <div class="row">
-              <div class="key empty"></div>
-              <div class="key empty"></div>
-              <div class="key call-btn" @click="makeCall">Call</div>
-              <div class="key empty"></div>
-              <div class="key empty"></div>
-            </div>
           </div>
+          <div class="key call-btn" @click="makeCall">Call</div>
         </div>
       </div>
     </div>
     <div id="scr_off" >
-      <h1 style="color: white">ИДЕТ ЗВОНОК</h1>
-      <button @click="startRecording" :disabled="recording">Начать запись</button>
-      <button @click="stopRecording" :disabled="!recording">Остановить запись</button>
+      <h1 style="color: black; font-size: 58px">ИДЕТ ЗВОНОК</h1>
+      <button class="btn" @click="startRecording" :disabled="recording">Начать запись</button>
+      <button class="btn" @click="stopRecording" :disabled="!recording">Остановить запись</button>
+      <br>
+      <button class="btn stop">Закончить разговор</button>
     </div>
   </div>
 </template>
@@ -85,12 +81,12 @@ export default {
       }
     },
     async saveRecording() {
-      const blob = new Blob(this.chunks, { type: 'audio/mpeg' });
+      const blob = new Blob(this.chunks, { type: 'audio/mp3' });
       const url = URL.createObjectURL(blob);
       const formData = new FormData();
-      formData.append('audio', blob, 'recorded_audio.mp3'); // Добавляем файл в FormData
+      formData.append('audio', blob, 'recorded_audio.mp3');
 
-      const urlPost = 'http://127.0.0.1:8000/api/audio';
+      const urlPost = 'http://127.0.0.1:8000/api/audio/';
       try {
         const response = await fetch(urlPost, {
           method: 'POST',
@@ -99,7 +95,7 @@ export default {
         if (response.ok) {
           console.log('Аудиофайл успешно отправлен');
         } else {
-          console.error('Ошибка при отправке аудиофайла:', response.statusText);
+          console.error('Ошибка при отправке аудиофайла:', response.message);
         }
       } catch (error) {
         console.error('Ошибка при выполнении запроса:', error);
@@ -132,6 +128,25 @@ export default {
 </script>
 
 <style scoped>
+#scr_off{
+  position: relative;
+  top: -30px;
+}
+.stop{
+  background: orangered !important;
+}
+.btn:disabled{
+  background: darkred;
+}
+.btn{
+  margin: 10px;
+  border: none;
+  background: #2f6b57;
+  color: white;
+  font-size: 22px;
+  padding: 10px;
+  border-radius: 10px;
+}
 #scr_off{
   display: none;
 }
@@ -184,6 +199,7 @@ export default {
 .row {
   display: flex;
   justify-content: space-between;
+  //width: 83%;
 
 }
 
@@ -191,7 +207,7 @@ export default {
   background-color: #f2f2f2; /* iOS button background color */
   border-radius: 10px;
   padding: 25px;
-  margin: 10px 0 10px 0;
+  margin: 5px 0 5px 0;
   text-align: center;
   font-size: 24px;
   cursor: pointer;
@@ -212,6 +228,8 @@ export default {
 .call-btn {
   background-color: #34c759; /* iPhone call button green */
   color: #fff;
+  margin-top: 20px;
+  //font-size: 33px;
 }
 
 .call-btn:hover {
