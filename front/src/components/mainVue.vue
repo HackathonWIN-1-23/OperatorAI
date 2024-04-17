@@ -84,9 +84,26 @@ export default {
         this.mediaRecorder.stop();
       }
     },
-    saveRecording() {
+    async saveRecording() {
       const blob = new Blob(this.chunks, { type: 'audio/mpeg' });
       const url = URL.createObjectURL(blob);
+      const formData = new FormData();
+      formData.append('audio', blob, 'recorded_audio.mp3'); // Добавляем файл в FormData
+
+      const urlPost = 'http://127.0.0.1:8000/api/audio';
+      try {
+        const response = await fetch(urlPost, {
+          method: 'POST',
+          body: formData
+        });
+        if (response.ok) {
+          console.log('Аудиофайл успешно отправлен');
+        } else {
+          console.error('Ошибка при отправке аудиофайла:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Ошибка при выполнении запроса:', error);
+      }
       const a = document.createElement('a');
       document.body.appendChild(a);
       a.style = 'display: none';
