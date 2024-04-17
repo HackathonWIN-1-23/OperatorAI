@@ -1,12 +1,16 @@
+import os
+import uuid
+from urllib.parse import urljoin
+
 import requests
 import json
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
-from django.http import FileResponse
+from django.http import FileResponse, JsonResponse
 from rest_framework.views import APIView
 from rest_framework import status
 from g4f.client import Client
-
+from django.conf import settings
 
 class Chat:
     def __init__(self):
@@ -18,7 +22,7 @@ class Chat:
             self.chat_history.append({"role": "user", "content": message})
             print(self.chat_history)
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-3.5-turbo",
                 messages=self.chat_history
             )
             self.chat_history.append(
@@ -60,10 +64,14 @@ class FileUploadView(APIView):
 
         if response.status_code == 200:
             mp3_data = audio_response.content
-            with open('output.mp3', 'wb') as f:
+            file_name = str(uuid.uuid4()) + '.mp3'
+            public_dir = os.path.join(settings.BASE_DIR, 'public')
+            file_path = os.path.join(public_dir, file_name)
+            with open(file_path, 'wb') as f:
                 f.write(mp3_data)
             print('Файл успешно сохранен как output.mp3')
-            return FileResponse(mp3_data, as_attachment=True, filename='output.mp3',  status=status.HTTP_200_OK)
+            file_url = urljoin("http://127.0.0.1:8000/public/", file_name)
+            return JsonResponse({'file_url': file_url})
         else:
             print('Произошла ошибка при отправке запроса:', response.status_code)
 
