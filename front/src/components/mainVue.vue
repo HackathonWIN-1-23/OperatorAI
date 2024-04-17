@@ -61,9 +61,7 @@ export default {
       if (this.phoneNumber.trim() === '') {
         alert('Please enter a valid phone number.');
       } else {
-        // alert('Calling ' + this.phoneNumber);
         window.open('tel:' + this.phoneNumber);
-        // Implement your call functionality here
       }
     }
   }
