@@ -1,6 +1,6 @@
 <template>
   <div class="iphone">
-    <div class="screen">
+    <div id="scr" class="screen">
       <!-- Notch removed -->
       <div class="phone-content">
         <div class="phone-screen">
@@ -40,6 +40,11 @@
         </div>
       </div>
     </div>
+    <div id="scr_off" >
+      <h1 style="color: white">ИДЕТ ЗВОНОК</h1>
+      <button @click="startRecording" :disabled="recording">Начать запись</button>
+      <button @click="stopRecording" :disabled="!recording">Остановить запись</button>
+    </div>
   </div>
 </template>
 
@@ -47,10 +52,49 @@
 export default {
   data() {
     return {
-      phoneNumber: ''
+      phoneNumber: '',
+      mediaRecorder: null,
+      chunks: [],
+      recording: false
     };
   },
   methods: {
+    startRecording() {
+      this.chunks = [];
+      navigator.mediaDevices.getUserMedia({ audio: true })
+          .then(stream => {
+            this.mediaRecorder = new MediaRecorder(stream);
+            this.mediaRecorder.ondataavailable = e => {
+              this.chunks.push(e.data);
+            };
+            this.mediaRecorder.onstop = () => {
+              this.saveRecording();
+              this.recording = false;
+            };
+            this.mediaRecorder.start();
+            this.recording = true;
+          })
+          .catch(err => {
+            console.error('Ошибка при получении доступа к микрофону:', err);
+          });
+    },
+    stopRecording() {
+      console.log(this.chunks)
+      if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+        this.mediaRecorder.stop();
+      }
+    },
+    saveRecording() {
+      const blob = new Blob(this.chunks, { type: 'audio/mpeg' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      document.body.appendChild(a);
+      a.style = 'display: none';
+      a.href = url;
+      a.download = 'recorded_audio.mp3';
+      a.click();
+      window.URL.revokeObjectURL(url);
+    },
     addToNumber(num) {
       this.phoneNumber += num.toString();
     },
@@ -61,7 +105,9 @@ export default {
       if (this.phoneNumber.trim() === '') {
         alert('Please enter a valid phone number.');
       } else {
-        window.open('tel:' + this.phoneNumber);
+        // window.open('tel:' + this.phoneNumber);
+        document.getElementById('scr').style.display = 'none'
+        document.getElementById('scr_off').style.display = 'block'
       }
     }
   }
@@ -69,8 +115,11 @@ export default {
 </script>
 
 <style scoped>
+#scr_off{
+  display: none;
+}
 .iphone {
-  //background-color: #fff; /* iPhone background color */
+//background-color: #fff; /* iPhone background color */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -157,3 +206,5 @@ export default {
   font-size: 20px;
 }
 </style>
+
+

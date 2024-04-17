@@ -1,9 +1,8 @@
-<script setup>
-import MainView from '../src/components/mainVue.vue'
+<script>
 </script>
 
 <template>
-  <MainView/>
+  <RouterView/>
 </template>
 
-<style scoped></style>
+<style></style>
