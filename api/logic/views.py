@@ -4,34 +4,64 @@ from urllib.parse import urljoin
 
 import requests
 import json
+
+from pydub import AudioSegment
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, JsonResponse, HttpResponse
 from rest_framework.views import APIView
 from rest_framework import status
 from g4f.client import Client
 from django.conf import settings
+from .models import Conversation
+from .serializers import ConversationSerializer
+import pydub
+
 
 class Chat:
     def __init__(self):
         self.client = Client()
-        self.chat_history = []
 
-    def send_message(self, message):
+    def send_message(self, message, conversation_id):
         try:
-            self.chat_history.append({"role": "user", "content": message})
-            print(self.chat_history)
+            conversation = Conversation.objects.filter(id=conversation_id).first()
+            if not conversation:
+                conversation = Conversation.objects.create()
+            chat_history = ConversationSerializer(conversation).data.get('chat_history', [])
+            chat_history.append({"role": "user", "content": message})
+            print(chat_history)
             response = self.client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=self.chat_history
+                model="gpt-4-turbo",
+                messages=chat_history
             )
-            self.chat_history.append(
+            chat_history.append(
                 {"role": response.choices[0].message.role, "content": response.choices[0].message.content})
+            conversation.chat_history = chat_history
+            conversation.save()
             print(response.choices[0].message.role)
             return response.choices[0].message.content
         except Exception as e:
             print("Ошибка при отправке сообщения:", e)
             return "Произошла ошибка при отправке сообщения"
+
+
+def convert_wav_to_mp3(wav_file_path, mp3_file_path):
+    sound = AudioSegment.from_wav(wav_file_path)
+
+    sound.export(mp3_file_path, format="mp3")
+
+
+def your_view(file_obj):
+    public_dir = os.path.join(settings.BASE_DIR, 'public')
+    wav_file_path = os.path.join(public_dir, 'recorded_audio.wav')
+    with open(wav_file_path, 'wb') as f:
+        f.write(file_obj.read())
+
+    mp3_file_path = os.path.join(public_dir, 'recorded_audio.mp3')
+
+    convert_wav_to_mp3(wav_file_path, mp3_file_path)
+
+    return mp3_file_path
 
 class FileUploadView(APIView):
     parser_class = (FileUploadParser,)
@@ -40,6 +70,7 @@ class FileUploadView(APIView):
 
     def post(self, request, format=None):
         file_obj = request.data['audio']
+
         data = {
             "audio": file_obj
         }
@@ -50,9 +81,11 @@ class FileUploadView(APIView):
         parsed_response = json.loads(result)
         plain_text = parsed_response['text']
         print(plain_text)
+
         chat = Chat()
 
-        chat_response = chat.send_message(plain_text)
+        chat_response = chat.send_message(plain_text, request.data['conversation_id'])
+        # chat_response = chat.send_message(text, request.data['conversation_id'])
         print("AI: ", chat_response)
 
         data = {
@@ -62,7 +95,7 @@ class FileUploadView(APIView):
         url = 'https://tts.ulut.kg/api/tts'
         audio_response = requests.post(url, json=data, headers={'Authorization': f'Bearer {self.bearer_token}'})
 
-        if response.status_code == 200:
+        if audio_response.status_code == 200:
             mp3_data = audio_response.content
             file_name = str(uuid.uuid4()) + '.mp3'
             public_dir = os.path.join(settings.BASE_DIR, 'public')
@@ -73,7 +106,7 @@ class FileUploadView(APIView):
             file_url = urljoin("http://127.0.0.1:8000/public/", file_name)
             return JsonResponse({'file_url': file_url})
         else:
-            print('Произошла ошибка при отправке запроса:', response.status_code)
+            print('Произошла ошибка при отправке запроса:', audio_response.status_code)
 
     def get(self, request, format=None):
         return Response({'message': 'Hello World!'})
