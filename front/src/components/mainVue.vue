@@ -34,7 +34,7 @@
         </div>
       </div>
     </div>
-    <div id="scr_off" >
+    <div id="scr_off">
       <h1 style="color: black; font-size: 58px">ИДЕТ ЗВОНОК</h1>
       <button class="btn" @click="startRecording" :disabled="recording">Начать запись</button>
       <button class="btn" @click="stopRecording" :disabled="!recording">Остановить запись</button>
@@ -45,6 +45,7 @@
 </template>
 
 <script>
+import audio from '../assets/кайсф.mp3';
 export default {
   data() {
     return {
@@ -57,7 +58,7 @@ export default {
   methods: {
     startRecording() {
       this.chunks = [];
-      navigator.mediaDevices.getUserMedia({ audio: true })
+      navigator.mediaDevices.getUserMedia({audio: true})
           .then(stream => {
             this.mediaRecorder = new MediaRecorder(stream);
             this.mediaRecorder.ondataavailable = e => {
@@ -81,11 +82,16 @@ export default {
       }
     },
     async saveRecording() {
-      const blob = new Blob(this.chunks, { type: 'audio/mp3' });
-      const url = URL.createObjectURL(blob);
+      // const blob = new Blob(this.chunks, { type: 'audio/mp3' });
+      // const url = URL.createObjectURL(blob);
+      const filePath = '../assets/recorded_audio.mp3';
+      const response = await fetch(audio);
+      const blob = await response.blob();
+      console.log(1, blob);
       const formData = new FormData();
       formData.append('audio', blob, 'recorded_audio.mp3');
-
+      formData.append('conversation_id', 100);
+      console.log(formData);
       const urlPost = 'http://127.0.0.1:8000/api/audio/';
       try {
         const response = await fetch(urlPost, {
@@ -94,6 +100,11 @@ export default {
         });
         if (response.ok) {
           console.log('Аудиофайл успешно отправлен');
+          console.log(response);
+          const responseData = await response.json(); // Преобразуем ответ в JSON
+           const fileUrl = responseData.file_url;
+          const audio = new Audio(fileUrl);
+          audio.play();
         } else {
           console.error('Ошибка при отправке аудиофайла:', response.message);
         }
@@ -128,17 +139,20 @@ export default {
 </script>
 
 <style scoped>
-#scr_off{
+#scr_off {
   position: relative;
   top: -30px;
 }
-.stop{
+
+.stop {
   background: orangered !important;
 }
-.btn:disabled{
+
+.btn:disabled {
   background: darkred;
 }
-.btn{
+
+.btn {
   margin: 10px;
   border: none;
   background: #2f6b57;
@@ -147,12 +161,13 @@ export default {
   padding: 10px;
   border-radius: 10px;
 }
-#scr_off{
+
+#scr_off {
   display: none;
 }
+
 .iphone {
-//background-color: #fff; /* iPhone background color */
-  display: flex;
+//background-color: #fff; /* iPhone background color */ display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
@@ -188,7 +203,7 @@ export default {
 
 /* Additional class for iOS-like input */
 .ios-input {
-  font-size:28px ;
+  font-size: 28px;
   font-family: 'San Francisco', Arial, sans-serif; /* Use San Francisco font */
 }
 
@@ -199,7 +214,7 @@ export default {
 .row {
   display: flex;
   justify-content: space-between;
-  //width: 83%;
+//width: 83%;
 
 }
 
@@ -217,7 +232,7 @@ export default {
 
 .key.empty {
   visibility: hidden;
-  width: 40px ;
+  width: 40px;
 }
 
 .key:hover {
@@ -229,7 +244,7 @@ export default {
   background-color: #34c759; /* iPhone call button green */
   color: #fff;
   margin-top: 20px;
-  //font-size: 33px;
+//font-size: 33px;
 }
 
 .call-btn:hover {

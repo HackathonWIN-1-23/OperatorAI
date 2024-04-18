@@ -10,12 +10,10 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from django.http import FileResponse, JsonResponse, HttpResponse
 from rest_framework.views import APIView
-from rest_framework import status
 from g4f.client import Client
 from django.conf import settings
 from .models import Conversation
 from .serializers import ConversationSerializer
-import pydub
 
 
 class Chat:
@@ -44,24 +42,6 @@ class Chat:
             print("Ошибка при отправке сообщения:", e)
             return "Произошла ошибка при отправке сообщения"
 
-
-def convert_wav_to_mp3(wav_file_path, mp3_file_path):
-    sound = AudioSegment.from_wav(wav_file_path)
-
-    sound.export(mp3_file_path, format="mp3")
-
-
-def your_view(file_obj):
-    public_dir = os.path.join(settings.BASE_DIR, 'public')
-    wav_file_path = os.path.join(public_dir, 'recorded_audio.wav')
-    with open(wav_file_path, 'wb') as f:
-        f.write(file_obj.read())
-
-    mp3_file_path = os.path.join(public_dir, 'recorded_audio.mp3')
-
-    convert_wav_to_mp3(wav_file_path, mp3_file_path)
-
-    return mp3_file_path
 
 class FileUploadView(APIView):
     parser_class = (FileUploadParser,)
