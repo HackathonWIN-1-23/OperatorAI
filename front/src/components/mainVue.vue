@@ -45,14 +45,18 @@
 </template>
 
 <script>
-import audio from '../assets/кайсф.mp3';
+import audio1 from '../assets/1.mp3';
+import audio2 from '../assets/2.mp3';
+import audio3 from '../assets/3.mp3';
 export default {
   data() {
     return {
+      audioArr:[audio1, audio2, audio3],
       phoneNumber: '',
       mediaRecorder: null,
       chunks: [],
-      recording: false
+      recording: false,
+      index:0
     };
   },
   methods: {
@@ -82,10 +86,8 @@ export default {
       }
     },
     async saveRecording() {
-      // const blob = new Blob(this.chunks, { type: 'audio/mp3' });
-      // const url = URL.createObjectURL(blob);
-      const filePath = '../assets/recorded_audio.mp3';
-      const response = await fetch(audio);
+      const response = await fetch(this.audioArr[this.index]);
+      this.index +=1
       const blob = await response.blob();
       console.log(1, blob);
       const formData = new FormData();

@@ -5,7 +5,6 @@ from urllib.parse import urljoin
 import requests
 import json
 
-from pydub import AudioSegment
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from django.http import FileResponse, JsonResponse, HttpResponse
